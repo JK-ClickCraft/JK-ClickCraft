@@ -54,6 +54,7 @@ body { overflow-x: hidden; }
 
   /* Portfolio grid */
   .portfolio-grid { grid-template-columns: repeat(2, 1fr); }
+  .projects-grid { grid-template-columns: repeat(2, 1fr); }
 
   /* Footer grid */
   .footer-grid {
@@ -214,6 +215,7 @@ body { overflow-x: hidden; }
 
   /* ── PORTFOLIO ── */
   .portfolio-grid { grid-template-columns: 1fr; gap: 16px; }
+  .projects-grid { grid-template-columns: 1fr; gap: 16px; }
   .portfolio-card { padding: 0; }
 
   /* ── STATS / COUNTER SECTION ── */
