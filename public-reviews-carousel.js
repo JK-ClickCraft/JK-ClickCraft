@@ -174,8 +174,14 @@ function updateCarousel() {
   const carousel = document.getElementById('reviewsCarouselInner');
   if (!carousel) return;
 
-  const offset = -reviewsCarouselState.current * 100;
-  carousel.style.transform = `translateX(${offset}%)`;
+  const viewport = document.getElementById('reviewsCarousel');
+  if (viewport && carousel.querySelector('.review-carousel-slide')) {
+    const slideRatio = window.matchMedia('(max-width: 768px)').matches ? 0.88 : 0.72;
+    const slideWidth = viewport.clientWidth * slideRatio;
+    const centeredOffset = (viewport.clientWidth - slideWidth) / 2;
+    const offset = reviewsCarouselState.current * slideWidth - centeredOffset;
+    carousel.style.transform = `translateX(-${offset}px)`;
+  }
 
   // Update dots
   const dots = document.querySelectorAll('.carousel-dot');
@@ -261,6 +267,11 @@ function initPublicReviewsCarousel() {
     (reviews) => {
       if (!reviews.length) {
         carouselInner.innerHTML = '';
+        reviewsCarouselState.reviews = [];
+        reviewsCarouselState.total = 0;
+        reviewsCarouselState.current = 0;
+        clearInterval(reviewsCarouselState.autoSlideInterval);
+        reviewsCarouselState.autoSlideInterval = null;
         if (reviewsEmpty) {
           reviewsEmpty.textContent = 'No client stories are visible yet. Share your feedback and help others learn about your experience with us.';
           reviewsEmpty.classList.remove('hidden');
@@ -284,6 +295,7 @@ function initPublicReviewsCarousel() {
       carouselInner.innerHTML = reviews
         .map((review) => `<div class="review-carousel-slide">${createReviewCardMarkup(review)}</div>`)
         .join('');
+      updateCarousel();
 
       // Render dots
       const dotsContainer = document.getElementById('carouselDots');

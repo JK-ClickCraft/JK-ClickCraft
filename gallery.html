@@ -1243,7 +1243,7 @@
 
         <!-- Export Row -->
         <div class="cds-export-row">
-          <button class="cds-export-btn" onclick="exportCSS()">Export CSS</button>
+          <button class="cds-export-btn" onclick="exportCSS()">Export PDF</button>
           <button class="cds-export-btn ghost" onclick="copyPalette()">Copy Palette</button>
         </div>
 
@@ -2583,6 +2583,7 @@
 </style>
 <link rel="stylesheet" href="mobile-responsive.css" />
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 // ═══════════════════════════════
 //  PALETTE LIBRARY — 52 PALETTES
@@ -2729,7 +2730,7 @@ function applyColors() {
   const isOutline = btnStyle === 'outline';
 
   // Nav styles
-  const navBg = currentTheme === 'dark' ? adjustColor(bg, -10) : '#ffffff';
+  const navBg = currentTheme === 'dark' ? adjustColor(bg, -10) : surface;
   const navBorder = currentTheme === 'dark' ? `rgba(255,255,255,0.08)` : `rgba(0,0,0,0.08)`;
   el('luiNav', { background: navBg, borderBottom: `1px solid ${navBorder}` });
   el('luiLogo', { color: primary });
@@ -2744,7 +2745,7 @@ function applyColors() {
   // Hero
   const heroGrad = currentTheme === 'dark'
     ? `linear-gradient(160deg, ${adjustColor(bg, 15)} 0%, ${bg} 60%)`
-    : `linear-gradient(160deg, ${adjustColor(textCol, -80)} 0%, ${adjustColor(textCol, -70)} 60%)`;
+    : `linear-gradient(160deg, ${surface} 0%, ${bg} 100%)`;
   el('luiHero', { background: heroGrad });
   el('luiEyebrow', { color: primary });
   el('luiH1', { color: textCol });
@@ -2754,7 +2755,7 @@ function applyColors() {
   el('luiBg', { background: hexToRgba(primary, 0.1), color: primary, border: `1px solid ${hexToRgba(primary,0.3)}`, borderRadius: r });
 
   // Cards
-  const cardsBg = currentTheme === 'dark' ? adjustColor(bg, -5) : adjustColor(textCol, -88);
+  const cardsBg = currentTheme === 'dark' ? adjustColor(bg, -5) : surface;
   el('luiCards', { background: cardsBg });
   ['luiCard1','luiCard2','luiCard3'].forEach((id, i) => {
     el(id, { background: hexToRgba(primary, 0.04), border: `1px solid ${hexToRgba(primary, 0.12)}` });
@@ -2908,14 +2909,128 @@ function switchTab(tab, el) {
 
 // ── Export ──
 function exportCSS() {
-  const p = document.getElementById('c-primary').value;
-  const s = document.getElementById('c-secondary').value;
-  const a = document.getElementById('c-accent').value;
-  const bg = document.getElementById('c-bg').value;
-  const sf = document.getElementById('c-surface').value;
-  const t = document.getElementById('c-text').value;
-  const css = `:root {\n  --color-primary: ${p};\n  --color-secondary: ${s};\n  --color-accent: ${a};\n  --color-background: ${bg};\n  --color-surface: ${sf};\n  --color-text: ${t};\n}`;
-  navigator.clipboard.writeText(css).then(() => toast('CSS Variables Copied!'));
+  const palette = [
+    ['Primary', document.getElementById('c-primary').value],
+    ['Secondary', document.getElementById('c-secondary').value],
+    ['Accent', document.getElementById('c-accent').value],
+    ['Background', document.getElementById('c-bg').value],
+    ['Surface', document.getElementById('c-surface').value],
+    ['Text', document.getElementById('c-text').value]
+  ];
+  const css = `:root {\n${palette.map(([name, value]) => `  --color-${name.toLowerCase()}: ${value};`).join('\n')}\n}`;
+  const accent = palette.find(([name]) => name === 'Accent')[1];
+  const pdfApi = window.jspdf;
+  if (!pdfApi || !pdfApi.jsPDF) {
+    toast('PDF exporter is unavailable. Please check your internet connection');
+    return;
+  }
+  const { jsPDF } = pdfApi;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const pageWidth = 210;
+  const left = 20;
+  const right = 190;
+  const rgb = hex => {
+    if (Array.isArray(hex)) return hex;
+    const value = hex.replace('#', '');
+    return [parseInt(value.slice(0, 2), 16), parseInt(value.slice(2, 4), 16), parseInt(value.slice(4, 6), 16)];
+  };
+  const setColor = (hex, mode = 'text') => {
+    const [r, g, b] = rgb(hex);
+    if (mode === 'fill') doc.setFillColor(r, g, b);
+    else if (mode === 'draw') doc.setDrawColor(r, g, b);
+    else doc.setTextColor(r, g, b);
+  };
+  const muted = [102, 112, 133];
+  const border = [220, 227, 236];
+
+  setColor(accent, 'fill');
+  doc.rect(0, 0, pageWidth, 5, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  setColor(accent);
+  doc.text('BRAND COLOR SPECIFICATION', left, 18);
+  doc.setFontSize(24);
+  doc.setTextColor(31, 42, 55);
+  doc.text('JK ', left, 29);
+  setColor(accent);
+  doc.text('Click Craft', left + 13, 29);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(...muted);
+  doc.text('Custom Design Studio', right, 19, { align: 'right' });
+  doc.text(`Generated ${new Date().toLocaleDateString('en-IN')}`, right, 24, { align: 'right' });
+  doc.setDrawColor(...border);
+  doc.line(left, 37, right, 37);
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(22);
+  doc.setTextColor(31, 42, 55);
+  doc.text('Custom Color Palette', left, 53);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9.5);
+  doc.setTextColor(...muted);
+  doc.text('A selected color system prepared from the JK Click Craft Design Studio.', left, 61);
+
+  setColor(accent, 'draw');
+  setColor(accent, 'fill');
+  doc.roundedRect(left, 70, 170, 22, 3, 3, 'FD');
+  doc.setFillColor(255, 255, 255);
+  doc.circle(31, 81, 5, 'F');
+  setColor(accent, 'fill');
+  doc.circle(31, 81, 3.2, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.setTextColor(31, 42, 55);
+  doc.text('Accent Color', 42, 80);
+  doc.setFont('courier', 'normal');
+  doc.setFontSize(10);
+  doc.setTextColor(...muted);
+  doc.text(accent.toUpperCase(), 42, 86);
+
+  palette.forEach(([name, value], index) => {
+    const column = index % 2;
+    const row = Math.floor(index / 2);
+    const x = left + column * 88;
+    const y = 103 + row * 22;
+    setColor(name === 'Accent' ? accent : border, 'draw');
+    doc.roundedRect(x, y, 82, 16, 2, 2, 'S');
+    setColor(value, 'fill');
+    doc.circle(x + 9, y + 8, 4, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9);
+    doc.setTextColor(31, 42, 55);
+    doc.text(name, x + 17, y + 7.5);
+    doc.setFont('courier', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(...muted);
+    doc.text(value.toUpperCase(), x + 17, y + 12.5);
+  });
+
+  setColor([245, 247, 251], 'fill');
+  doc.roundedRect(left, 175, 170, 49, 3, 3, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  setColor(accent);
+  doc.text('CSS VARIABLES', left + 8, 185);
+  doc.setFont('courier', 'normal');
+  doc.setFontSize(8.5);
+  doc.setTextColor(52, 64, 84);
+  css.split('\n').forEach((line, index) => doc.text(line, left + 8, 193 + index * 5));
+
+  doc.setDrawColor(...border);
+  doc.line(left, 270, right, 270);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(31, 42, 55);
+  doc.text('JK Click Craft', left, 279);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(...muted);
+  doc.text('Web Design · Development · Digital Solutions', right, 279, { align: 'right' });
+  doc.text('jkclickcraft.in · jkclickcraft.support@gmail.com', left, 285);
+  doc.text('+91 99947 84050 · Tiruppur, Tamil Nadu', right, 285, { align: 'right' });
+  doc.save('jk-click-craft-color-palette.pdf');
+  toast('PDF downloaded successfully');
 }
 
 function copyPalette() {
