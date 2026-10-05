@@ -299,9 +299,12 @@
     h1.title{font-size:1.45rem;}
     .hero-badge{font-size:0.72rem;padding:6px 10px;left:12px;bottom:12px;}
   }
+  .progress{position:fixed;top:0;left:0;right:0;height:4px;z-index:100;background:transparent;}
+  .progress span{display:block;height:100%;width:0;background:linear-gradient(120deg,#6d84eb 0%,#5468d6 100%);}
 </style>
 </head>
 <body>
+  <div class="progress" aria-hidden="true"><span></span></div>
 
 <div class="topbar">
   <div class="topbar-inner">
@@ -545,6 +548,8 @@
 
   <div class="more-links">
     <a href="https://jkclickcraft.in/Blog/Why-Does-Every-Business-Needs-Website-in-2026.html">Why Every Business Needs a Website in 2026 →</a>
+    <a href="Is-Your-Website-Bringing-You-Customers.html">Is Your Website Bringing You Customers? →</a>
+    <a href="Why-Your-Business-Is-Not-Showing-on-Google-in-2026.html">Why Your Business Is Not Showing on Google →</a>
     <a href="https://jkclickcraft.in/blog-index.html">More business growth articles →</a>
   </div>
 </div>
@@ -577,5 +582,17 @@
   <div class="footer-bottom">© 2026 JK Click Craft. All rights reserved. · Crafted with ❤️ in Tamil Nadu, India</div>
 </footer>
 
+<script>
+(function(){
+  var progressBar=document.querySelector('.progress span');
+  function updateProgress(){
+    var page=document.documentElement;
+    var scrollableHeight=page.scrollHeight-page.clientHeight;
+    if(progressBar)progressBar.style.width=(scrollableHeight>0?page.scrollTop/scrollableHeight*100:0)+'%';
+  }
+  window.addEventListener('scroll',updateProgress,{passive:true});
+  updateProgress();
+})();
+</script>
 </body>
 </html>

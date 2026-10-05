@@ -522,6 +522,8 @@
     padding:48px 0 28px;
     margin-top:20px;
   }
+    .progress{position:fixed;top:0;left:0;right:0;height:4px;z-index:100;background:transparent;}
+    .progress span{display:block;height:100%;width:0;background:var(--grad);}
   .footer-grid{
     display:grid;
     grid-template-columns:1.4fr 1fr 1fr;
@@ -560,6 +562,7 @@
 </style>
 </head>
 <body>
+  <div class="progress" aria-hidden="true"><span></span></div>
 
   <div class="topstrip">
     <div class="wrap">
@@ -594,6 +597,8 @@
           <li><a class="text-link" href="../index.html#services">SEO and Google visibility</a></li>
           <li><a class="text-link" href="../index.html#portfolio">Website portfolio</a></li>
           <li><a class="text-link" href="../index.html#gallery">Design gallery</a></li>
+          <li><a class="text-link" href="Is-Your-Website-Bringing-You-Customers.html">Turn website visitors into customers</a></li>
+          <li><a class="text-link" href="Why-Your-Business-Is-Not-Showing-on-Google-in-2026.html">Improve your Google visibility</a></li>
           <li><a class="text-link" href="../blog-index.html">More business growth articles</a></li>
         </ul>
       </aside>
@@ -791,5 +796,17 @@
     </div>
   </footer>
 
+<script>
+(function(){
+  var progressBar=document.querySelector('.progress span');
+  function updateProgress(){
+    var page=document.documentElement;
+    var scrollableHeight=page.scrollHeight-page.clientHeight;
+    if(progressBar)progressBar.style.width=(scrollableHeight>0?page.scrollTop/scrollableHeight*100:0)+'%';
+  }
+  window.addEventListener('scroll',updateProgress,{passive:true});
+  updateProgress();
+})();
+</script>
 </body>
 </html>
